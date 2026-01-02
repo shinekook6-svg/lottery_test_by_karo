@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Formula - Lottery Master 9</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; background-color: #1a1a1a; color: #fff; margin: 0; padding: 10px; }
+        .header { text-align: center; color: #f1c40f; padding: 10px; border-bottom: 2px solid #f1c40f; margin-bottom: 20px; }
+        .stats-container { display: flex; justify-content: space-around; background: #333; padding: 10px; border-radius: 8px; margin-bottom: 20px; }
+        .stat-box { text-align: center; }
+        .stat-val { font-size: 20px; font-weight: bold; color: #2ecc71; }
+        
+        table { width: 100%; border-collapse: collapse; background: #222; }
+        th, td { border: 1px solid #444; padding: 12px; text-align: center; }
+        th { background: #f1c40f; color: #000; }
+        
+        .input-active { background: #fff !important; color: #000 !important; font-weight: bold; width: 60px; border: none; text-align: center; }
+        .locked-row { background: #333; color: #888; pointer-events: none; }
+        .win { color: #2ecc71; font-weight: bold; }
+        .lose { color: #e74c3c; font-weight: bold; }
+        
+        .plan-selector { display: flex; gap: 10px; margin-bottom: 15px; }
+        .plan-btn { flex: 1; padding: 10px; border: none; border-radius: 5px; cursor: pointer; background: #555; color: white; }
+        .active-plan { background: #f1c40f; color: black; font-weight: bold; }
+
+        /* Payment Modal */
+        #payment-gate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .pay-box { background: #fff; color: #000; padding: 20px; border-radius: 10px; text-align: center; width: 80%; }
+    </style>
+</head>
+<body>
+
+    <div id="payment-gate">
+        <div class="pay-box">
+            <h2>Access Locked 🔒</h2>
+            <p>Master Formula ကို သုံးရန် Admin ထံ ငွေလွှဲပြီး Access ရယူပါ။</p>
+            <button onclick="unlockDemo()" style="padding: 10px 20px; background: #2ecc71; border: none; color: white; border-radius: 5px;">Demo ကြည့်ရန် (Unlock)</button>
+        </div>
+    </div>
+
+    <div class="header">
+        <h1>LOTTERY MASTER 9</h1>
+    </div>
+
+    <div class="plan-selector">
+        <button class="plan-btn active-plan" onclick="setPlan('A')">PLAN A</button>
+        <button class="plan-btn" onclick="setPlan('B')">PLAN B</button>
+        <button class="plan-btn" onclick="setPlan('Auto')">AUTO</button>
+    </div>
+
+    <div class="stats-container">
+        <div class="stat-box"><div>WIN RATE</div><div class="stat-val" id="winrate">0%</div></div>
+        <div class="stat-box"><div>WIN</div><div class="stat-val" id="totalwin">0</div></div>
+        <div class="stat-box"><div>LOSE</div><div class="stat-val" style="color: #e74c3c;" id="totallose">0</div></div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>PERIOD</th>
+                <th>OPEN</th>
+                <th>PREDICT</th>
+                <th>RESULT</th>
+            </tr>
+        </thead>
+        <tbody id="table-body">
+            </tbody>
+    </table>
+
+    <script>
+        let currentPlan = 'A';
+        let stats = { win: 0, lose: 0 };
+        const totalPeriods = 60; // 60 Sheets representation
+
+        function unlockDemo() {
+            document.getElementById('payment-gate').style.display = 'none';
+        }
+
+        function setPlan(plan) {
+            currentPlan = plan;
+            document.querySelectorAll('.plan-btn').forEach(btn => btn.classList.remove('active-plan'));
+            event.target.classList.add('active-plan');
+        }
+
+        function calculateResult(rowId) {
+            const input = document.getElementById(`input-${rowId}`);
+            const val = input.value;
+            if(!val) return;
+
+            // BACKGROUND SYSTEM LOGIC (Simulating 61 Sheets)
+            // ပွဲစဉ်အလိုက် Formula ပြောင်းလဲမှုကို တွက်ချက်ခြင်း
+            const periodBase = rowId % 60; 
+            let prediction = (periodBase % 2 === 0) ? "BIG" : "SMALL";
+            if(currentPlan === 'B') prediction = (prediction === "BIG") ? "SMALL" : "BIG";
+
+            const resultType = (parseInt(val) >= 5) ? "BIG" : "SMALL";
+            const isWin = (prediction === resultType);
+
+            // Update UI
+            const row = document.getElementById(`row-${rowId}`);
+            const predictCell = document.getElementById(`predict-${rowId}`);
+            const resultCell = document.getElementById(`result-${rowId}`);
+
+            predictCell.innerText = prediction;
+            resultCell.innerText = isWin ? "WIN" : "LOSE";
+            resultCell.className = isWin ? "win" : "lose";
+
+            // Lock Row
+            row.classList.add('locked-row');
+            input.disabled = true;
+
+            // Update Stats
+            isWin ? stats.win++ : stats.lose++;
+            updateStats();
+        }
+
+        function updateStats() {
+            const total = stats.win + stats.lose;
+            const rate = total === 0 ? 0 : Math.round((stats.win / total) * 100);
+            document.getElementById('winrate').innerText = rate + "%";
+            document.getElementById('totalwin').innerText = stats.win;
+            document.getElementById('totallose').innerText = stats.lose;
+        }
+
+        function initTable() {
+            const body = document.getElementById('table-body');
+            for(let i = 131; i <= 150; i++) { // Sample Periods
+                const row = document.createElement('tr');
+                row.id = `row-${i}`;
+                row.innerHTML = `
+                    <td>${i}</td>
+                    <td><input type="number" id="input-${i}" class="input-active" onchange="calculateResult(${i})"></td>
+                    <td id="predict-${i}">-</td>
+                    <td id="result-${i}">-</td>
+                `;
+                body.appendChild(row);
+            }
+        }
+
+        initTable();
+    </script>
+</body>
+</html>
