@@ -1,0 +1,1 @@
+# lottery_test_by_karo
